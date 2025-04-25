@@ -156,8 +156,23 @@ surface_init(
 int
 surface_new(
         surface_t* const s) {
+
+    /*
+       XXX This is done out of order and could lead to memory leaks. 
+           The free should be done first.
+
+           Actually, I think this function is problematic.  If it's a
+           first initializer, then the free could be a bad free of some
+           junk pointer, but if it's a reinitializer, then the free is
+           needed.
+     */
     memset(s, 0, sizeof(surface_t));
 
+    /* 
+       XXX Should be before the memset.  Maybe add an element to 
+           surface_t to say whether it's been previously initialized,
+           then free if and only if previously initialized.
+      */
     surface_free(s);
 
     return 0;

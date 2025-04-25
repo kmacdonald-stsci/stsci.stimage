@@ -40,6 +40,7 @@ DAMAGE.
 #include "lib/xybbox.h"
 #include "surface/surface.h"
 
+/* XXX add comments for these values */
 typedef enum {
     geomap_fit_shift,
     geomap_fit_xyscale,
@@ -50,6 +51,7 @@ typedef enum {
     geomap_fit_LAST
 } geomap_fit_e;
 
+/* XXX add comments for these values */
 typedef enum {
     geomap_proj_none,
     geomap_proj_lin,

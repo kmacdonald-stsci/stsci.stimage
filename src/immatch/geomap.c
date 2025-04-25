@@ -1506,26 +1506,34 @@ geo_get_results(
     return status;
 }
 
+/* XXX Can the number of parameters be reduced using structs? */
+/* XXX What does it mean "to map" ref to input coord systems? */
+/* 
+ * Computes the transformation required to map the reference
+ * coordinate system to the input coordinate system.
+ */
 int
 geomap(
-        const size_t ninput, const coord_t* const input,
-        const size_t nref, const coord_t* const ref,
-        const bbox_t* const bbox,
-        const geomap_fit_e fit_geometry,
-        const surface_type_e function,
-        const size_t xxorder,
-        const size_t xyorder,
-        const size_t yxorder,
-        const size_t yyorder,
-        const xterms_e xxterms,
-        const xterms_e yxterms,
-        const size_t maxiter,
-        const double reject,
+        const size_t ninput,  // Number of input coordinates
+        const coord_t* const input,  // Input coordinates
+        const size_t nref,  // Number of reference coordinates
+        const coord_t* const ref,  // Reference coordinates
+        const bbox_t* const bbox, // Bounding box defining valid pixels
+        const geomap_fit_e fit_geometry, // The fitting geometry to use
+        const surface_type_e function, // The type of analytic surface to fit
+        const size_t xxorder,  // Order of polynomial in x for x fit
+        const size_t xyorder,  // Order of polynomial in x for y fit
+        const size_t yxorder,  // Order of polynomial in y for x fit
+        const size_t yyorder,  // Order of polynomial in y for y fit
+        const xterms_e xxterms, // Not sure
+        const xterms_e yxterms, // Not sure
+        const size_t maxiter,  // Maximum number of iterations
+        const double reject,  // Rejection limits in units of sigma 
         /* Input/Output */
-        size_t* const noutput,
+        size_t* const noutput,  // Number of output records returned
         /* Output */
         geomap_output_t* const output, /* [MAX(ninput, nref)] */
-        geomap_result_t* const result,
+        geomap_result_t* const result, // Structure defining the fit that was found.
         stimage_error_t* const error) {
 
     geomap_fit_t     fit;
@@ -1546,6 +1554,7 @@ geomap(
     double           my_nan         = fmod(1.0, 0.0);
     int              status         = 1;
 
+    /* XXX ------------- f1 ------------- */
     assert(input);
     assert(ref);
     assert(error);
@@ -1565,7 +1574,9 @@ geomap(
             &fit, geomap_proj_none, fit_geometry, function,
             xxorder, xyorder, xxterms, yxorder, yyorder, yxterms,
             maxiter, reject);
+    /* XXX ------------- f1 ------------- */
 
+    /* XXX ------------- f2 ------------- */
     /* If bbox is NULL, provide a dummy one full of NaNs */
     if (bbox == NULL) {
         bbox_init(&tbbox);
@@ -1573,8 +1584,10 @@ geomap(
         bbox_copy(bbox, &tbbox);
     }
 
-    /* If the bbox is all NaNs, we don't need to reduce the data, saving an
-       alloc and copy */
+    /* 
+     * If the bbox is all NaNs, we don't need to reduce the data, saving an
+     * alloc and copy 
+     */
     if (bbox == NULL ||
         (!isfinite(tbbox.min.x) && !isfinite(tbbox.min.y) &&
          !isfinite(tbbox.max.x) && !isfinite(tbbox.max.y))) {
@@ -1593,6 +1606,7 @@ geomap(
         if (ref_in_bbox == NULL) goto exit;
 
         /* Reduce data to only those in the bbox */
+        /* XXX Change this double assignment to two lines of code */
         ninput_in_bbox = nref_in_bbox = limit_to_bbox(
                 ninput, input, ref, &tbbox, input_in_bbox, ref_in_bbox);
     }
@@ -1604,7 +1618,9 @@ geomap(
     /* Set the reference point for the projections to undefined */
     fit.refpt.x = my_nan;
     fit.refpt.y = my_nan;
+    /* XXX ------------- f2 ------------- */
 
+    /* XXX ------------- f3 ------------- */
     /* Allocate some memory */
     xfit = malloc_with_error(ninput_in_bbox * sizeof(double), error);
     if (xfit == NULL) goto exit;
@@ -1619,11 +1635,13 @@ geomap(
     for (i = 0; i < ninput_in_bbox; ++i) {
         weights[i] = 1.0;
     }
+    /* XXX ------------- f3 ------------- */
 
     /* Determine the actual max and min of the coordinates */
     determine_bbox(nref_in_bbox, ref_in_bbox, &tbbox);
     bbox_copy(&tbbox, &fit.bbox);
 
+    /* XXX ------------- f4 ------------- */
     if (geofit(
                 &fit, &sx1, &sy1, &sx2, &sy2, &has_sx2, &has_sy2,
                 ninput_in_bbox, input_in_bbox, ref_in_bbox, weights,
@@ -1637,9 +1655,11 @@ geomap(
     if (geo_get_results(
                 &fit, &sx1, &sy1, &sx2, &sy2, has_sx2, has_sy2, result,
                 error)) goto exit;
+    /* XXX ------------- f4 ------------- */
 
     /* DIFF: This section is from geo_plistd */
 
+    /* XXX ------------- f5 ------------- */
     /* Copy the results to the output buffer */
     tweights = malloc_with_error(ninput_in_bbox * sizeof(double), error);
     if (tweights == NULL) goto exit;
@@ -1674,6 +1694,7 @@ geomap(
             outi->residual.y = my_nan;
         }
     }
+    /* XXX ------------- f5 ------------- */
     *noutput = ninput_in_bbox;
 
     status = 0;
@@ -1702,6 +1723,10 @@ void
 geomap_result_init(
         geomap_result_t* const r) {
 
+    /* 
+       XXX Why not set the whole structure to 0?
+           Junk can still remain in the other memory.
+     */
     r->xcoeff = NULL;
     r->ycoeff = NULL;
     r->x2coeff = NULL;
@@ -1712,6 +1737,7 @@ void
 geomap_result_free(
         geomap_result_t* const r) {
 
+    /* XXX Also, the whole thing should be zeroed out. */
     free(r->xcoeff); r->xcoeff = NULL;
     free(r->ycoeff); r->ycoeff = NULL;
     free(r->x2coeff); r->x2coeff = NULL;

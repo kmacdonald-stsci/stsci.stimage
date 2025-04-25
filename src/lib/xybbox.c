@@ -43,7 +43,7 @@ void
 bbox_init(
         bbox_t* const bbox) {
 
-    double my_nan;
+    double my_nan; /* XXX why?  why not just NaN? */
 
     assert(bbox);
 

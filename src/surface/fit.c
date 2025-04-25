@@ -36,6 +36,7 @@ DAMAGE.
 #include "surface/fit.h"
 #include "lib/polynomial.h"
 
+/* XXX Need comments */
 static double
 vector_dot_product(
     const size_t n,
@@ -52,17 +53,22 @@ vector_dot_product(
     return sum;
 }
 
+/* 
+   XXX Overall needs to be refactored to be smaller 
+       Needs comments
+ */
 /* was dgsacpts */
 static int
 surface_fit_add_points(
-        surface_t* const s,
+        surface_t* const s,  /* XXX Change name to a real name */
         const size_t ncoord,
         const coord_t* const coord,
-        const double* const z,
-        double* const w,
+        const double* const z,  /* XXX Change name to a real name */
+        double* const w,  /* XXX Change name to a real name */
         const surface_fit_weight_e weight_type,
         stimage_error_t* const error) {
 
+    /* XXX Are all these single letter variables needed */
     size_t i, j, k, l, ii, jj, ll;
     double* byw = NULL;
     double* bw = NULL;
@@ -82,6 +88,7 @@ surface_fit_add_points(
     size_t ntimes;
     int status = 1;
 
+    /* Check inputs */
     assert(s);
     assert(coord);
     assert(z);
@@ -94,6 +101,7 @@ surface_fit_add_points(
     s->npoints += ncoord;
 
     /* Calculate weights */
+    /* XXX Could be its own function */
     switch (weight_type) {
     case surface_fit_weight_spacing:
         if (ncoord == 1) {
@@ -128,6 +136,7 @@ surface_fit_add_points(
     if (ybasis == NULL) goto exit;
 
     /* Calculate the non-zero basis functions */
+    /* XXX Could be its own function */
     switch (s->type) {
     case surface_type_polynomial:
         if (basis_poly(
@@ -164,6 +173,7 @@ surface_fit_add_points(
     bw = malloc_with_error(ncoord * sizeof(double), error);
     if (bw == NULL) goto exit;
 
+    /* XXX Expand comments */
     vzp = s->vector - 1;
     mzp = s->matrix;
     bxp = xbasis;
@@ -172,6 +182,7 @@ surface_fit_add_points(
     maxorder = MAX(s->xorder + 1, s->yorder + 1);
     xorder = s->xorder;
     ntimes = 0;
+    /* XXX This loop ends at line 254 */
     for (l = 1; l <= s->yorder; ++l) {
         for (i = 0; i < ncoord; ++i) {
             byw[i] = w[i] * byp[i];
@@ -260,9 +271,10 @@ surface_fit_add_points(
     return status;
 }
 
+/* XXX Needs comments */
 static int
 surface_fit_solve(
-        surface_t* const s,
+        surface_t* const s, /* XXX give real variable name */
         /* Output  */
         surface_fit_error_e* const error_type,
         stimage_error_t* const error) {
