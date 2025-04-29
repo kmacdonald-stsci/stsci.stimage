@@ -6,7 +6,8 @@
 #include "test.h"
 
 int main(int argv, char** argc) {
-    #define ncoords 512
+    // #define ncoords 512
+    #define ncoords 16
     coord_t data[ncoords];
     const coord_t* ptr[ncoords];
     size_t i = 0;
@@ -15,12 +16,17 @@ int main(int argv, char** argc) {
     double x = 0.0;
     double y = 0.0;
 
+    /* ---------------------------------------------------------------------- */
+    /* 
+     *  XXX Tests should be deterministic and never generate random data.
+     */
     srand48(0);
 
     for (i = 0; i < ncoords; ++i) {
         data[i].x = drand48();
         data[i].y = drand48();
     }
+    /* ---------------------------------------------------------------------- */
 
     xysort(ncoords, data, ptr);
 

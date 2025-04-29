@@ -40,11 +40,11 @@ DAMAGE.
 
 size_t
 xycoincide(
-    const size_t ncoords,
-    const coord_t* const * const input /*[ncoords]*/,
-    const coord_t** const output /*[ncoords]*/,
-    const double tolerance) {
-
+        const size_t ncoords,
+        const coord_t* const * const input /*[ncoords]*/,
+        const coord_t** const output /*[ncoords]*/,
+        const double tolerance)
+{
     double tolerance2 = tolerance * tolerance;
     size_t nunique = ncoords;
     double distance = 0.0;
@@ -55,6 +55,7 @@ xycoincide(
     assert(input);
     assert(output);
 
+    /* Copy input to output array */
     if ((coord_t **)input != (coord_t **)output) {
         memcpy(output, input, sizeof(coord_t *) * ncoords);
     }
@@ -86,7 +87,7 @@ xycoincide(
             r2 += distance * distance;
             if (r2 <= tolerance2) {
                 /* Delete it */
-                output[i] = NULL;
+                output[i] = NULL; /* XXX does this cause memory leaks? */
                 --nunique;
             }
         }

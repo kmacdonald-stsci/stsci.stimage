@@ -43,13 +43,17 @@ DAMAGE.
 
 #include "lib/lintransform.h"
 
+/* 
+   Compute linear transformation coefficients. 
+   XXX - This looks like a translation in addition to a rotation and scale
+ */
 void
 compute_lintransform(
-    const coord_t in,
-    const coord_t mag,
-    const coord_t rot,
-    const coord_t out,
-    lintransform_t* coeffs) {
+    const coord_t in,  // The origin of the input coordinates
+    const coord_t mag,  // Scale
+    const coord_t rot,  // Rotation (in degrees)
+    const coord_t out,  // The origin of the output coordinates
+    lintransform_t* coeffs) { // The output set of coefficients
 
     assert(coeffs);
 
@@ -67,12 +71,16 @@ compute_lintransform(
     coeffs->f = out.y - coeffs->d * in.x - coeffs->e * in.y;
 }
 
+/* 
+   Apply a linear transformation to a list of coordinates.
+   XXX - I'd like to see the theory of this transformation
+ */
 void
 apply_lintransform(
-    const lintransform_t* const coeffs,
-    size_t ncoords,
+    const lintransform_t* const coeffs, // A set of coeffs, for example created by compute_lintransform
+    size_t ncoords, // The number of coordinates in the list
     const coord_t* const input, /* [ncoords] */
-    coord_t* output) {
+    coord_t* output) { //The output set of coordinates.  May be equal to input.
 
     size_t i;
     double x, y;

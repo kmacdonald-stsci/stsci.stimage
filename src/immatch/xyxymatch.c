@@ -191,7 +191,8 @@ xyxymatch(
 
     apply_lintransform(&lintransform, ninput, input, input_trans);
     xysort(ninput, input_trans, input_trans_sorted);
-    ninput_unique = xycoincide(ninput, input_trans_sorted, input_trans_sorted, separation);
+    ninput_unique = xycoincide(
+            ninput, input_trans_sorted, input_trans_sorted, separation);
 
     /****************************************
      RUN THE DESIRED ALGORITHM
@@ -203,28 +204,34 @@ xyxymatch(
     state.output = output;
 
     switch (algorithm) {
-    case xyxymatch_algo_tolerance:
-        if (match_tolerance(
-                nref_unique, ref, ref_sorted,
-                ninput_unique, input_trans, input_trans_sorted,
-                tolerance,
-                xyxymatch_callback, &state,
-                error)) goto exit;
-        *noutput = state.outputp;
-        break;
-    case xyxymatch_algo_triangles:
-        if (match_triangles(
-                nref, nref_unique, ref, ref_sorted,
-                ninput, ninput_unique, input_trans, input_trans_sorted,
-                nmatch, tolerance, maxratio, nreject,
-                &xyxymatch_callback, &state,
-                error)) goto exit;
-        *noutput = state.outputp;
-        break;
-    case xyxymatch_algo_LAST:
-    default:
-        stimage_error_set_message(error, "Invalid algorithm");
-        goto exit;
+        case xyxymatch_algo_tolerance:
+            if (match_tolerance(
+                    nref_unique, ref, ref_sorted,
+                    ninput_unique, input_trans, input_trans_sorted,
+                    tolerance,
+                    xyxymatch_callback, &state,
+                    error))
+            {
+                goto exit;
+            }
+            *noutput = state.outputp;
+            break;
+        case xyxymatch_algo_triangles:
+            if (match_triangles(
+                    nref, nref_unique, ref, ref_sorted,
+                    ninput, ninput_unique, input_trans, input_trans_sorted,
+                    nmatch, tolerance, maxratio, nreject,
+                    &xyxymatch_callback, &state,
+                    error))
+            {
+                goto exit;
+            }
+            *noutput = state.outputp;
+            break;
+        case xyxymatch_algo_LAST:
+        default:
+            stimage_error_set_message(error, "Invalid algorithm");
+            goto exit;
     }
 
     status = 0;

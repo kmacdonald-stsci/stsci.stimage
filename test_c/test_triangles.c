@@ -5,6 +5,7 @@
 #include "lib/xycoincide.h"
 #include "test.h"
 
+/* XXX Refactor too big, does too much. */
 int main(int argc, char** argv) {
     #define ncoords 512
     coord_t data1[ncoords];
@@ -38,17 +39,26 @@ int main(int argc, char** argv) {
 
     stimage_error_init(&error);
 
+    /* ---------------------------------------------------------------------- */
+    /* 
+     *  XXX Tests should be deterministic and never generate random data.
+     */
     srand48(0);
 
     for (i = 0; i < ncoords; ++i) {
         data1[i].x = data2[i].x = drand48();
         data1[i].y = data2[i].y = drand48();
     }
+    /* ---------------------------------------------------------------------- */
 
+    /* Sort and remove coordinates too close */
     xysort(ncoords, data1, ptr1);
     xysort(ncoords, data2, ptr2);
     nunique = xycoincide(ncoords, ptr1, ptr1, tolerance);
+    printf("[%d] ncoords = %zu\n", __LINE__, ncoords);
+    printf("[%d] nunique = %zu\n", __LINE__, nunique);
 
+    /* min(nunique, max_points) choose 3 */
     if (max_num_triangles(nunique, max_points, &ntriangles1, &error)) {
         goto exit;
     }
@@ -78,7 +88,8 @@ int main(int argc, char** argv) {
     printf("Found %lu triangles\n", (unsigned long)ntriangles1);
 
     /* Print some random triangles, just for kicks */
-    for (i = ntriangles1-10; i < ntriangles1; ++i) {
+    // for (i = ntriangles1-10; i < ntriangles1; ++i) {
+    for (i = 0; i < 10; ++i) {
         tri = &triangles1[i];
         printf("Triangle %lu:\n", (unsigned long)i);
 
@@ -101,6 +112,7 @@ int main(int argc, char** argv) {
         printf("\n");
     }
 
+    /* Why check these things? */
     last_ratio = triangles1[0].ratio;
     for (i = 1; i < ntriangles1; ++i) {
         tri = &triangles1[i];

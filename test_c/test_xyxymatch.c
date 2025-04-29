@@ -25,12 +25,17 @@ int main(int argc, char** argv) {
 
     stimage_error_init(&error);
 
+    /* ---------------------------------------------------------------------- */
+    /* 
+     *  XXX Tests should be deterministic and never generate random data.
+     */
     srand48(0);
 
     for (i = 0; i < ncoords; ++i) {
         ref[i].x = input[i].x = drand48();
         ref[i].y = input[i].y = drand48();
     }
+    /* ---------------------------------------------------------------------- */
 
     status = xyxymatch(ncoords, input,
                        ncoords, ref,
@@ -40,11 +45,13 @@ int main(int argc, char** argv) {
                        tolerance, 0.0, 0, 0.0, 0,
                        &error);
 
+    printf("[%d] error message:  %s\n", __LINE__, stimage_error_get_message(&error));
     if (status) {
         printf("%s", stimage_error_get_message(&error));
         return status;
     }
 
+    printf("[%d] noutput = %zu, ncoords = %d\n", __LINE__, noutput, ncoords);
     if (noutput != ncoords) {
         return 1;
     }
@@ -70,12 +77,17 @@ int main(int argc, char** argv) {
 
     /* Now with different values in input and ref */
 
+    /* ---------------------------------------------------------------------- */
+    /* 
+     *  XXX Tests should be deterministic and never generate random data.
+     */
     for (i = 0; i < ncoords; ++i) {
         input[i].x = drand48();
         input[i].y = drand48();
         ref[i].x = drand48();
         ref[i].y = drand48();
     }
+    /* ---------------------------------------------------------------------- */
 
     status = xyxymatch(ncoords, input,
                        ncoords, ref,
@@ -85,11 +97,13 @@ int main(int argc, char** argv) {
                        tolerance, 0.0, 0, 0.0, 0,
                        &error);
 
+    printf("[%d] error message:  %s\n", __LINE__, stimage_error_get_message(&error));
     if (status) {
         printf("%s", stimage_error_get_message(&error));
         return status;
     }
 
+    printf("[%d] noutput = %zu, ncoords = %d\n", __LINE__, noutput, ncoords);
     if (noutput == 0 || noutput == ncoords) {
         return 1;
     }

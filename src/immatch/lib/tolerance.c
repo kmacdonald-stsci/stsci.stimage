@@ -48,8 +48,9 @@ match_tolerance(
         const double tolerance,
         coord_match_callback_t* callback,
         void* callback_data,
-        stimage_error_t* const error) {
-
+        stimage_error_t* const error)
+{
+    /* XXX refactor long function */
     const double   tolerance2  = tolerance*tolerance;
     size_t         rp          = 0;
     size_t         blp         = 0;

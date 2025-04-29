@@ -105,12 +105,16 @@ combinatorial(
 
     assert(n > ngroup);
     assert(ngroup > 0);
-    assert(n < 2346);
+    assert(n < 2346); // XXX This will cause an overflow
 
     if (n == 0) {
         return 1;
     }
 
+    /*
+     *  XXX To prevent overflow, the multiplication should be done
+     *      in the same loop.  Even then, this can easily overflow.
+     */
     fac = n;
     for (i = n - 1; i > n - 3; --i) {
         fac *= i;
@@ -123,6 +127,32 @@ combinatorial(
 
     return fac / gfac;
 }
+
+
+#if 0
+/* XXX Alternative */
+int comb(int n, int r) {
+    if (r > n) return 0; // If r is greater than n, return 0
+    if (r == 0 || n == r) return 1; // If r is 0 or equal to n, return 1
+    int res = 1;
+    for (int i = 1; i <= r; i++) {
+        res *= n - (r - i);
+        res /= i;
+    }
+    return res;
+}
+
+#include <cmath>
+int log_comb(int n, int r) {
+    if (r > n) return 0;
+    if (r == 0 || n == r) return 1;
+    double res = 0;
+    for (int i = 0; i < r; i++) {
+        res += log(n - i) - log(i + 1);
+    }
+    return round(exp(res));
+}
+#endif
 
 static int
 double_compare(

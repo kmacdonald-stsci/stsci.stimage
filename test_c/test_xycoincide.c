@@ -19,16 +19,23 @@ int main(int argv, char** argc) {
     const double tolerance = 0.1;
     const double tolerance2 = tolerance*tolerance;
 
+    /* ---------------------------------------------------------------------- */
+    /* 
+     *  XXX Tests should be deterministic and never generate random data.
+     */
     srand48(0);
 
     for (i = 0; i < ncoords; ++i) {
         data[i].x = drand48();
         data[i].y = drand48();
     }
+    /* ---------------------------------------------------------------------- */
 
     xysort(ncoords, data, ptr);
 
     nunique = xycoincide(ncoords, ptr, ptr, tolerance);
+    printf("[%d] ncoords = %zu\n", __LINE__, ncoords);
+    printf("[%d] nunique = %zu\n", __LINE__, nunique);
 
     for (i = 0; i < nunique; ++i) {
         for (j = 0; j < nunique; ++j) {

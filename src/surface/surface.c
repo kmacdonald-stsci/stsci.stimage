@@ -35,15 +35,17 @@ DAMAGE.
 
 #include "surface/surface.h"
 
+/* Initialize a surface_t object. */
 int
 surface_init(
-        surface_t* const s,
-        const surface_type_e function,
-        const int xorder,
-        const int yorder,
-        const xterms_e xterms,
-        const bbox_t* const bbox,
-        stimage_error_t* const error) {
+        /* XXX Change 's' to a real variable name */
+        surface_t* const s, // A pointer to a surface object
+        const surface_type_e function, // The surface type
+        const int xorder, // x-order of the surface to be fit
+        const int yorder, // y-order of the surface to be fit
+        const xterms_e xterms, // presence of cross terms (when xterms != 0)
+        const bbox_t* const bbox, // Bounding box
+        stimage_error_t* const error) { // Error object
 
     int order;
 
@@ -67,6 +69,11 @@ surface_init(
     switch (function) {
     case surface_type_chebyshev:
     case surface_type_legendre:
+        /* 
+           XXX Much of this switch statment is duplicated in the 
+               following case.
+         */
+        /* ----- */
         s->xorder = xorder;
         s->yorder = yorder;
         s->nxcoeff = xorder;
@@ -87,6 +94,7 @@ surface_init(
             stimage_error_set_message(error, "Invalid surface xterms value");
             goto fail;
         }
+        /* ----- */
         s->xrange = 2.0 / (bbox->max.x - bbox->min.x);
         s->xmaxmin = -(bbox->max.x - bbox->min.x) / 2.0;
         s->yrange = 2.0 / (bbox->max.y - bbox->min.y);
@@ -94,6 +102,11 @@ surface_init(
         break;
 
     case surface_type_polynomial:
+        /* 
+           XXX Much of this switch statment is duplicated in the 
+               above case.
+         */
+        /* ----- */
         s->xorder = xorder;
         s->yorder = yorder;
         s->nxcoeff = xorder;
@@ -114,6 +127,7 @@ surface_init(
             stimage_error_set_message(error, "Invalid surface xterms value");
             goto fail;
         }
+        /* ----- */
         s->xrange = 1.0;
         s->xmaxmin = 0.0;
         s->yrange = 1.0;
@@ -190,9 +204,11 @@ surface_free(
     free(s->coeff); s->coeff = NULL;
 }
 
+/* Expand comments */
 static int
 surface_copy_vector(
         const size_t size,
+        /* XXX Give a real variable name */
         const double* const s,
         double** const d,
         stimage_error_t* const error) {
@@ -238,6 +254,9 @@ surface_copy(
 
     bbox_copy(&s->bbox, &d->bbox);
 
+    /* 
+       XXX - Maybe multiple if statemts to make debugging easier.
+     */
     if (surface_copy_vector(
                 s->ncoeff * s->ncoeff, s->matrix, &d->matrix, error) ||
         surface_copy_vector(
@@ -259,6 +278,7 @@ surface_copy(
 
 int
 surface_zero(
+        /* XXX - give a real variable name */
         surface_t* const s,
         stimage_error_t* const error) {
 
@@ -269,36 +289,39 @@ surface_zero(
     assert(s->matrix);
 
     switch (s->type) {
-    case surface_type_legendre:
-    case surface_type_polynomial:
-    case surface_type_chebyshev:
-        /* s->npoints = 0; */
+        case surface_type_legendre:
+        case surface_type_polynomial:
+        case surface_type_chebyshev:
+            /* s->npoints = 0; */
 
-        for (i = 0; i < s->ncoeff; ++i) {
-            s->vector[i] = 0.0;
-        }
+            for (i = 0; i < s->ncoeff; ++i) {
+                s->vector[i] = 0.0;
+            }
 
-        for (i = 0; i < s->ncoeff; ++i) {
-            s->coeff[i] = 0.0;
-        }
+            for (i = 0; i < s->ncoeff; ++i) {
+                s->coeff[i] = 0.0;
+            }
 
-        for (i = 0; i < s->ncoeff * s->ncoeff; ++i) {
-            s->matrix[i] = 0.0;
-        }
+            for (i = 0; i < s->ncoeff * s->ncoeff; ++i) {
+                s->matrix[i] = 0.0;
+            }
 
-        for (i = 0; i < s->ncoeff * s->ncoeff; ++i) {
-            s->cholesky_fact[i] = 0.0;
-        }
+            for (i = 0; i < s->ncoeff * s->ncoeff; ++i) {
+                s->cholesky_fact[i] = 0.0;
+            }
 
-        break;
-    default:
-        stimage_error_set_message(error, "Unknown surface type");
-        return 1;
+            break;
+        default:
+            stimage_error_set_message(error, "Unknown surface type");
+            return 1;
     }
 
     return 0;
 }
 
+/* 
+ * Print the contents of a surface structure
+ */
 void
 surface_print(
         const surface_t* const s) {
@@ -310,39 +333,39 @@ surface_print(
     assert(s);
 
     switch (s->type) {
-    case surface_type_polynomial:
-        type = "polynomial";
-        break;
+        case surface_type_polynomial:
+            type = "polynomial";
+            break;
 
-    case surface_type_chebyshev:
-        type = "chebyshev";
-        break;
+        case surface_type_chebyshev:
+            type = "chebyshev";
+            break;
 
-    case surface_type_legendre:
-        type = "legendre";
-        break;
+        case surface_type_legendre:
+            type = "legendre";
+            break;
 
-    default:
-        type = "UNKNOWN";
-        break;
+        default:
+            type = "UNKNOWN";
+            break;
     }
 
     switch (s->xterms) {
-    case xterms_none:
-        xterms = "none";
-        break;
+        case xterms_none:
+            xterms = "none";
+            break;
 
-    case xterms_half:
-        xterms = "half";
-        break;
+        case xterms_half:
+            xterms = "half";
+            break;
 
-    case xterms_full:
-        xterms = "full";
-        break;
+        case xterms_full:
+            xterms = "full";
+            break;
 
-    default:
-        xterms = "UNKNOWN";
-        break;
+        default:
+            xterms = "UNKNOWN";
+            break;
     }
 
     printf("SURFACE\n");

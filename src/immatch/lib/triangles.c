@@ -46,6 +46,7 @@ max_num_triangles(
         stimage_error_t* const error) {
 
     size_t n = MIN(ncoords, maxnpoints);
+    /* XXX Hardcoded numbers should not be used. */
     if (n >= 2346 || n == 0) {
         stimage_error_set_message(
             error,
@@ -53,6 +54,7 @@ max_num_triangles(
         return 1;
     }
 
+    /* XXX Worry about overflow */
     *num_triangles = combinatorial(n, 3);
 
     return 0;
@@ -92,8 +94,9 @@ find_triangles(
         const size_t maxnpoints,
         const double tolerance,
         const double maxratio,
-        stimage_error_t* const error) {
-
+        stimage_error_t* const error)
+{
+    /* XXX refactor long function */
     const double tol2 = tolerance * tolerance;
     const size_t nsample = MAX(1, ncoords / maxnpoints);
     const size_t npoints = MIN(ncoords, nsample * maxnpoints);
@@ -575,8 +578,9 @@ _match_triangles(
         const size_t nreject,
         size_t* nkeep,
         size_t* nmerge,
-        stimage_error_t* const error) {
-
+        stimage_error_t* const error)
+{
+    /* XXX Refactor long function */
     const coord_t**   refcoord_matches   = NULL;
     const coord_t**   inputcoord_matches = NULL;
     size_t            nleft              = 0;
@@ -617,44 +621,50 @@ _match_triangles(
     }
 
     /* Find all the reference triangles */
-    if (max_num_triangles(nref, nmatch, &nref_triangles, error)) goto exit;
+    if (max_num_triangles(nref, nmatch, &nref_triangles, error)) {
+        goto exit;
+    }
 
-    ref_triangles = malloc_with_error(
-            nref_triangles * sizeof(triangle_t), error);
+    ref_triangles = malloc_with_error(nref_triangles * sizeof(triangle_t), error);
     if (ref_triangles == NULL) goto exit;
 
     if (find_triangles(nref, ref_sorted, &nref_triangles, ref_triangles,
-                       nmatch, tolerance, maxratio, error)) goto exit;
+            nmatch, tolerance, maxratio, error)) {
+        goto exit;
+    }
 
     if (nref_triangles == 0) {
-        stimage_error_set_message(
-            error,
-            "No valid reference triangles found.");
+        stimage_error_set_message(error, "No valid reference triangles found.");
         goto exit;
     }
 
     /* Find all the input triangles */
-    if (max_num_triangles(ninput, nmatch, &ninput_triangles, error)) goto exit;
+    if (max_num_triangles(ninput, nmatch, &ninput_triangles, error)) {
+        goto exit;
+    }
 
-    input_triangles = malloc_with_error(
-            ninput_triangles * sizeof(triangle_t), error);
-    if (input_triangles == NULL) goto exit;
+    input_triangles = malloc_with_error(ninput_triangles * sizeof(triangle_t), error);
+    if (input_triangles == NULL) {
+        goto exit;
+    }
 
-    if (find_triangles(ninput, input_sorted, &ninput_triangles,
-                       input_triangles, nmatch, tolerance, maxratio,
-                       error)) goto exit;
+    if (find_triangles(ninput, input_sorted, &ninput_triangles, input_triangles,
+                       nmatch, tolerance, maxratio, error))
+    {
+        goto exit;
+    }
 
     if (ninput_triangles == 0) {
-        stimage_error_set_message(
-            error,
-            "No valid input triangles found.");
+        stimage_error_set_message(error, "No valid input triangles found.");
         goto exit;
     }
 
     ntriangle_matches = MAX(nref_triangles, ninput_triangles);
     triangle_matches = malloc_with_error(
-        ntriangle_matches * sizeof(triangle_match_t), error);
-    if (triangle_matches == NULL) goto exit;
+            ntriangle_matches * sizeof(triangle_match_t), error);
+    if (triangle_matches == NULL) {
+        goto exit;
+    }
 
     /* Match the triangles in the input list to those in the reference
        list */
@@ -665,11 +675,11 @@ _match_triangles(
         left = input;
         nright = nref;
         right = ref;
-        if (merge_triangles(
-                nref_triangles, ref_triangles,
-                ninput_triangles, input_triangles,
-                &ntriangle_matches, triangle_matches,
-                error)) goto exit;
+        if (merge_triangles(nref_triangles, ref_triangles, ninput_triangles,
+                input_triangles, &ntriangle_matches, triangle_matches, error))
+        {
+            goto exit;
+        }
     } else {
         refcoord_matches = refcoord_matches_;
         inputcoord_matches = inputcoord_matches_;
@@ -677,11 +687,11 @@ _match_triangles(
         left = ref;
         nright = ninput;
         right = input;
-        if (merge_triangles(
-                ninput_triangles, input_triangles,
-                nref_triangles, ref_triangles,
-                &ntriangle_matches, triangle_matches,
-                error)) goto exit;
+        if (merge_triangles(ninput_triangles, input_triangles, nref_triangles,
+                    ref_triangles, &ntriangle_matches, triangle_matches, error))
+        {
+            goto exit;
+        }
     }
 
     *nmerge = ntriangle_matches;
@@ -692,9 +702,7 @@ _match_triangles(
     }
 
     /* Reject triangles */
-    if (reject_triangles(&ntriangle_matches, triangle_matches,
-                         nreject,
-                         error)) {
+    if (reject_triangles(&ntriangle_matches, triangle_matches, nreject, error)) {
         goto exit;
     }
 
@@ -707,11 +715,10 @@ _match_triangles(
     }
 
     /* Match the coordinates */
-    if (vote_triangle_matches(
-                nleft, left, nright, right,
-                ntriangle_matches, triangle_matches,
-                ncoord_matches, refcoord_matches, inputcoord_matches,
-                error)) {
+    if (vote_triangle_matches(nleft, left, nright, right, ntriangle_matches,
+                              triangle_matches, ncoord_matches, refcoord_matches,
+                              inputcoord_matches, error))
+    {
         goto exit;
     }
 
@@ -741,8 +748,9 @@ match_triangles(
         const size_t nreject,
         coord_match_callback_t* callback,
         void* callback_data,
-        stimage_error_t* const error) {
-
+        stimage_error_t* const error)
+{
+    /* XXX Refactor long function */
     size_t          ncoord_matches     = nmatch;
     const coord_t** refcoord_matches   = NULL;
     const coord_t** inputcoord_matches = NULL;

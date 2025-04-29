@@ -38,6 +38,7 @@ DAMAGE.
 
 #include "lib/util.h"
 
+/* XXX this needs commenting. */
 typedef struct {
     double a;
     double b;
