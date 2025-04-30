@@ -43,18 +43,21 @@ max_num_triangles(
         const size_t ncoords,
         const size_t maxnpoints,
         size_t* num_triangles,
-        stimage_error_t* const error) {
-
+        stimage_error_t* const error)
+{
     size_t n = MIN(ncoords, maxnpoints);
     /* XXX Hardcoded numbers should not be used. */
     if (n >= 2346 || n == 0) {
-        stimage_error_set_message(
-            error,
-            "maxnpoints should be a lower number");
+        stimage_error_set_message(error, "maxnpoints should be a lower number");
         return 1;
     }
 
-    /* XXX Worry about overflow */
+    /* 
+     * XXX Worry about overflow.  Maybe because it's choose 3, that's not a worry. 
+     *     This could just be changed to n * (n-1) * (n-2) / 6 and the function
+     *     removed.
+     *     With some testing, this should be okay with n up to 100,000.
+     */
     *num_triangles = combinatorial(n, 3);
 
     return 0;
@@ -107,6 +110,7 @@ find_triangles(
     double dx[3], dy[3], sides2[3], sides[3];
     double cosc, cosc2, sinc2;
     double ratio, loctol;
+    char * msg = NULL;
 
     assert(coords);
     assert(ntriangles);
@@ -114,9 +118,8 @@ find_triangles(
     assert(error);
 
     if (maxratio > 10.0 || maxratio < 5.0) {
-        stimage_error_format_message(
-            error,
-            "maxratio should be in the range 5.0 - 10.0 (%f)", maxratio);
+        msg = "maxratio should be in the range 5.0 - 10.0 (%f)";
+        stimage_error_format_message(error, msg, maxratio);
         return 1;
     }
 
@@ -129,33 +132,32 @@ find_triangles(
 
             for (k = j + nsample; k < npoints; k += nsample) {
                 dist_jk = euclid_distance2(coords[j], coords[k]);
-                if (dist_jk <= tol2) {
+                if (dist_jk <= tol2) { /* Coords too close */
                     continue;
                 }
 
                 dist_ki = euclid_distance2(coords[k], coords[i]);
-                if (dist_ki <= tol2) {
+                if (dist_ki <= tol2) { /* Coords too close */
                     continue;
                 }
 
                 #ifndef NDEBUG
                     if (ntri >= *ntriangles) {
-                        stimage_error_format_message(
-                            error,
-                            "Found more triangles than were allocated for (%d)\n",
-                            *ntriangles);
+                        msg = "Found more triangles than were allocated for (%d)\n";
+                        stimage_error_format_message(error, msg, *ntriangles);
                         return 1;
                     }
                 #endif /* NDEBUG */
 
                 tri = &triangles[ntri];
-                /* DIFF: The original stores the index of the
-                   triangle.  Do we need to do that? */
-
-                /* Order the vertices with the shortest side of the triangle
-                   between vertices 1 and 2 and the intermediate side between
-                   vertices 2 and 3.
-                */
+                /* 
+                 * DIFF: The original stores the index of the triangle.
+                 *       Do we need to do that?
+                 *
+                 * Order the vertices with the shortest side of the triangle
+                 *  between vertices 1 and 2 and the intermediate side between
+                 *  vertices 2 and 3.
+                 */
                 if (dist_ij <= dist_jk) {
                     if (dist_ki <= dist_ij) {
                         tri->vertices[0] = coords[k];
@@ -188,25 +190,24 @@ find_triangles(
 
                 /* Compute the lengths of the sides */
                 for (m = 0; m < 3; ++m) {
-                    dx[m] = tri->vertices[sides_def[m][0]]->x -
-                        tri->vertices[sides_def[m][1]]->x;
-                    dy[m] = tri->vertices[sides_def[m][0]]->y -
-                        tri->vertices[sides_def[m][1]]->y;
-                    sides2[m] = dx[m]*dx[m] + dy[m]*dy[m];
-                    assert(sides2[m] >= 0.0);
+                    dx[m] = tri->vertices[sides_def[m][0]]->x - tri->vertices[sides_def[m][1]]->x;
+                    dy[m] = tri->vertices[sides_def[m][0]]->y - tri->vertices[sides_def[m][1]]->y;
+
+                    sides2[m] = dx[m] * dx[m] + dy[m] * dy[m];
+                    assert(sides2[m] >= 0.0);  /* XXX Why wouldn't this be the case? */
+
                     sides[m] = sqrt(sides2[m]);
                 }
 
-                /* If the ratio of long to short is too high, reject
-                   this triangle */
+                /* If the ratio of long to short is too high, reject this triangle */
                 ratio = sides[2] / sides[1];
                 if (ratio > maxratio) {
                     continue;
                 }
 
-                /* Compute the cos, cos ** 2 and sin ** 2 of the angle at
-                   vertex 1. */
-                cosc = (dx[2]*dx[1] + dy[2]*dy[1]) / (sides[2]*sides[1]);
+                /* XXX HERE */
+                /* Compute the cos, cos ** 2 and sin ** 2 of the angle at vertex 1. */
+                cosc = (dx[2] * dx[1] + dy[2] * dy[1]) / (sides[2] * sides[1]);
                 cosc2 = MAX(0.0, MIN(1.0, cosc*cosc));
                 sinc2 = MAX(0.0, MIN(1.0, 1.0 - cosc2));
 
@@ -607,16 +608,12 @@ _match_triangles(
     assert(error);
 
     if (nref < 3) {
-        stimage_error_set_message(
-            error,
-            "Too few reference coordinates to do triangle matching");
+        stimage_error_set_message(error, "Too few reference coordinates to do triangle matching");
         goto exit;
     }
 
     if (ninput < 3) {
-        stimage_error_set_message(
-            error,
-            "Too few input coordinates to do triangle matching");
+        stimage_error_set_message(error, "Too few input coordinates to do triangle matching");
         goto exit;
     }
 
@@ -626,10 +623,13 @@ _match_triangles(
     }
 
     ref_triangles = malloc_with_error(nref_triangles * sizeof(triangle_t), error);
-    if (ref_triangles == NULL) goto exit;
+    if (ref_triangles == NULL) {
+        goto exit;
+    }
 
     if (find_triangles(nref, ref_sorted, &nref_triangles, ref_triangles,
-            nmatch, tolerance, maxratio, error)) {
+            nmatch, tolerance, maxratio, error))
+    {
         goto exit;
     }
 
@@ -660,21 +660,21 @@ _match_triangles(
     }
 
     ntriangle_matches = MAX(nref_triangles, ninput_triangles);
-    triangle_matches = malloc_with_error(
-            ntriangle_matches * sizeof(triangle_match_t), error);
+    triangle_matches = malloc_with_error(ntriangle_matches * sizeof(triangle_match_t), error);
     if (triangle_matches == NULL) {
         goto exit;
     }
 
-    /* Match the triangles in the input list to those in the reference
-       list */
+    /* Match the triangles in the input list to those in the reference list */
     if (nref_triangles <= ninput_triangles) {
         refcoord_matches = inputcoord_matches_;
         inputcoord_matches = refcoord_matches_;
+
         nleft = ninput;
         left = input;
         nright = nref;
         right = ref;
+
         if (merge_triangles(nref_triangles, ref_triangles, ninput_triangles,
                 input_triangles, &ntriangle_matches, triangle_matches, error))
         {
@@ -683,10 +683,12 @@ _match_triangles(
     } else {
         refcoord_matches = refcoord_matches_;
         inputcoord_matches = inputcoord_matches_;
+
         nleft = nref;
         left = ref;
         nright = ninput;
         right = input;
+
         if (merge_triangles(ninput_triangles, input_triangles, nref_triangles,
                     ref_triangles, &ntriangle_matches, triangle_matches, error))
         {
@@ -762,21 +764,22 @@ match_triangles(
     size_t          i                  = 0;
     int             status             = 1;
 
-    refcoord_matches = malloc_with_error(
-            ncoord_matches * sizeof(coord_t*), error);
-    if (refcoord_matches == NULL) goto exit;
+    refcoord_matches = malloc_with_error(ncoord_matches * sizeof(coord_t*), error);
+    if (refcoord_matches == NULL) {
+        goto exit;
+    }
 
-    inputcoord_matches = malloc_with_error(
-            ncoord_matches * sizeof(coord_t*), error);
-    if (inputcoord_matches == NULL) goto exit;
+    inputcoord_matches = malloc_with_error(ncoord_matches * sizeof(coord_t*), error);
+    if (inputcoord_matches == NULL) {
+        goto exit;
+    }
 
-    if (_match_triangles(
-        nref_unique, ref, ref_sorted,
-        ninput_unique, input, input_sorted,
-        &ncoord_matches, refcoord_matches, inputcoord_matches,
-        nmatch, tolerance, maxratio, nreject,
-        &nkeep, &nmerge,
-        error)) goto exit;
+    if (_match_triangles(nref_unique, ref, ref_sorted, ninput_unique, input, input_sorted,
+                         &ncoord_matches, refcoord_matches, inputcoord_matches, nmatch,
+                         tolerance, maxratio, nreject, &nkeep, &nmerge, error))
+    {
+        goto exit;
+    }
 
     if (ncoord_matches == 0 || (ncoord_matches <= 3 && nkeep < nmerge)) {
         status = 0;
