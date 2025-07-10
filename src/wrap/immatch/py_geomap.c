@@ -40,17 +40,6 @@ DAMAGE.
 #include "immatch/geomap.h"
 #include <structmember.h>
 
-#if 0
-// This is only available for python versions 3.12 or later.
-void print_exception(int line) {
-    PyObject *exc = PyErr_GetRaisedException();
-    printf("Error - Line %d: ", line);
-    PyErr_DisplayException(exc);
-    // PyErr_SetRaisedException(exc);
-    return;
-}
-#endif
-
 /*
  * Check an object to see if it has an attribute.
  */
@@ -101,6 +90,14 @@ void print_exception(int line) {
 
 // Debugging macro
 #if 0
+// This is only available for python versions 3.12 or later.
+void print_exception(int line) {
+    PyObject *exc = PyErr_GetRaisedException();
+    printf("Error - Line %d: ", line);
+    PyErr_DisplayException(exc);
+    // PyErr_SetRaisedException(exc);
+    return;
+}
 #define EXCEPTION_INFO do { if (PyErr_Occurred()) { print_exception(__LINE__); } }while(0)
 #else
 #define EXCEPTION_INFO
@@ -210,14 +207,10 @@ geomap_dealloc(geomap_object *self)
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
-/* 
- # XXX Not sure what these pragmas do.  I commented this out
- *     and everything compiled just fine.
- */
-// #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-// #pragma clang diagnostic push
-// #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
 static PyMethodDef geomap_methods[] = {
     {NULL, NULL, 0, NULL}  /* Sentinel */
     // {NULL}  /* Sentinel */
@@ -256,12 +249,8 @@ static PyTypeObject geomap_class = {
     .tp_dictoffset = offsetof(geomap_object, dict), // <--- REQUIRED
 };
 
-/* 
- # XXX Not sure what these pragmas do.  I commented this out
- *     and everything compiled just fine.
- */
-// #pragma clang diagnostic pop
-// #pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 
 /*
  * XXX This function is way too long and does too many things.
@@ -313,7 +302,7 @@ py_geomap(PyObject* self, PyObject* args, PyObject* kwds)
     //     The refactor would use a struct, instead of the large number of variables
     //     within this function.
     const char*    keywords[]    = {
-        "input", "ref", "bbox", "fit_geometry", "function",
+        "fit_obj", "input", "ref", "bbox", "fit_geometry", "function",
         "xxorder", "xyorder", "yxorder", "yyorder", "xxterms",
         "yxterms", "maxiter", "reject", NULL
     };
@@ -323,13 +312,16 @@ py_geomap(PyObject* self, PyObject* args, PyObject* kwds)
     stimage_error_init(&error);
 
     if (!PyArg_ParseTupleAndKeywords(
-                args, kwds, "OO|Ossnnnnssnd:geomap",
+                args, kwds, "OOO|Ossnnnnssnd:geomap",
                 (char **)keywords,
-                &input_obj, &ref_obj, &bbox_obj, &fit_geometry_str,
+                &fit_obj, &input_obj, &ref_obj, &bbox_obj, &fit_geometry_str,
                 &surface_type_str, &xxorder, &xyorder, &yxorder, &yyorder,
-                &xxterms_str, &yxterms_str, &maxiter, &reject)) {
+                &xxterms_str, &yxterms_str, &maxiter, &reject))
+    {
+        dbg_print("Error: PyArg_ParseTupleAndKeywords\n");
         return NULL;
     }
+    dbg_print("fit_obj = %p\n", fit_obj);
 
     // Create Nx2 array, essentially a list of (x,y) points.
     // XXX Refactor candidate input_array = n_by_2_array(input_obj);
@@ -378,7 +370,7 @@ py_geomap(PyObject* self, PyObject* args, PyObject* kwds)
     // XXX End parse_args_from_python_to_c(python_args, c_args);
     // ---------------------------------------------------------------------------
 
-    // dbg_print("Entering geomap\n");
+    dbg_print("Entering geomap\n");
     if (geomap(
                 ninput, (coord_t*)PyArray_DATA(input_array),
                 nref, (coord_t*)PyArray_DATA(ref_array),
@@ -392,7 +384,7 @@ py_geomap(PyObject* self, PyObject* args, PyObject* kwds)
         PyErr_SetString(PyExc_RuntimeError, stimage_error_get_message(&error));
         goto exit;
     }
-    // dbg_print("Returned from geomap\n");
+    dbg_print("Returned from geomap\n");
 
     // -----------------------------------------------------
     // XXX Refactor candidate output_array = get_output_array(output);
@@ -423,11 +415,12 @@ py_geomap(PyObject* self, PyObject* args, PyObject* kwds)
     }
     // -----------------------------------------------------
 
+    // XXX This is the area that will be most affected.
     // -----------------------------------------------------
     // XXX Refactor candidate fit_obj = get_geomap_result(fit);
     // Develop GeomapResult class
-    fit_obj = geomap_new(&geomap_class, NULL, NULL);
-    CHECK_NULL_PYNONE_JUMP(fit_obj, exit);
+    // fit_obj = geomap_new(&geomap_class, NULL, NULL);
+    // CHECK_NULL_PYNONE_JUMP(fit_obj, exit);
 
     // dbg_print("ADD_ATTR\n");
     ADD_ATTR(from_geomap_fit_e, fit.fit_geometry, "fit_geometry");
