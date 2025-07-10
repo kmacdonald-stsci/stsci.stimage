@@ -31,6 +31,7 @@ from __future__ import absolute_import
 from ._version import version as __version__
 from . import _stimage
 
+import numpy as np
 
 def xyxymatch(input,
               ref,
@@ -251,14 +252,16 @@ def xyxymatch(input,
 class GeomapResults:
     def __init__(self):
         """Initialize attributes needed."""
-        self.fit_geometry = None
-        self.function = None
-        self.rms = None
-        self.mean_ref = None
-        self.mean_input = None
-        self.shift = None
-        self.mag = None
-        self.rotation = None
+        self.fit_geometry = "Nothing"
+        self.function = "No function"
+
+        self.rms = np.array([0.0, 0.0], dtype=np.float32)
+        self.mean_ref = np.array([0.0, 0.0], dtype=np.float32)
+        self.mean_input = np.array([0.0, 0.0], dtype=np.float32)
+        self.shift = np.array([0.0, 0.0], dtype=np.float32)
+        self.mag = np.array([0.0, 0.0], dtype=np.float32)
+        self.rotation = np.array([0.0, 0.0], dtype=np.float32)
+
         self.xcoeff = None
         self.ycoeff = None
         self.x2coeff = None
