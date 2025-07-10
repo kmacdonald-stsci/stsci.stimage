@@ -248,6 +248,39 @@ def xyxymatch(input,
         nreject)
 
 
+class GeomapResults:
+    def __init__(self):
+        """Initialize attributes needed."""
+        self.fit_geometry = None
+        self.function = None
+        self.rms = None
+        self.mean_ref = None
+        self.mean_input = None
+        self.shift = None
+        self.mag = None
+        self.rotation = None
+        self.xcoeff = None
+        self.ycoeff = None
+        self.x2coeff = None
+        self.y2coeff = None
+
+    def __repr__(self):
+        rstr = "    GeomapResults:\n"
+        rstr += f".fit_geometry     = {self.fit_geometry}\n"
+        rstr += f".function         = {self.function}\n"
+        rstr += f".rms              = {self.rms}\n"
+        rstr += f".mean_ref         = {self.mean_ref}\n"
+        rstr += f".mean_input       = {self.mean_input}\n"
+        rstr += f".shift            = {self.shift}\n"
+        rstr += f".mag              = {self.mag}\n"
+        rstr += f".rotation         = {self.rotation}\n"
+        rstr += f".xcoeff           = {self.xcoeff}\n"
+        rstr += f".ycoeff           = {self.ycoeff}\n"
+        rstr += f".x2coeff          = {self.x2coeff}\n"
+        rstr += f".y2coeff          = {self.y2coeff}\n"
+        return rstr
+
+
 def geomap(input,
            ref,
            bbox=None,
@@ -572,7 +605,9 @@ def geomap(input,
       - *resid_x*
       - *resid_y*
     """
+    fit_obj = GeomapResults()
     return _stimage.geomap(
+        fit_obj,
         input,
         ref,
         bbox,
