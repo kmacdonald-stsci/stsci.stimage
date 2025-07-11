@@ -249,6 +249,10 @@ def xyxymatch(input,
         nreject)
 
 
+def ndarray_str(arr):
+    return np.array2string(arr, separator=", ", precision=4, max_line_width=np.nan)
+
+
 class GeomapResults:
     def __init__(self):
         """Initialize attributes needed."""
@@ -271,16 +275,18 @@ class GeomapResults:
         rstr = "    GeomapResults:\n"
         rstr += f".fit_geometry     = {self.fit_geometry}\n"
         rstr += f".function         = {self.function}\n"
-        rstr += f".rms              = {self.rms}\n"
-        rstr += f".mean_ref         = {self.mean_ref}\n"
-        rstr += f".mean_input       = {self.mean_input}\n"
-        rstr += f".shift            = {self.shift}\n"
-        rstr += f".mag              = {self.mag}\n"
-        rstr += f".rotation         = {self.rotation}\n"
-        rstr += f".xcoeff           = {self.xcoeff}\n"
-        rstr += f".ycoeff           = {self.ycoeff}\n"
-        rstr += f".x2coeff          = {self.x2coeff}\n"
-        rstr += f".y2coeff          = {self.y2coeff}\n"
+
+        rstr += f".rms              = {ndarray_str(self.rms)}\n"
+        rstr += f".mean_ref         = {ndarray_str(self.mean_ref)}\n"
+        rstr += f".mean_input       = {ndarray_str(self.mean_input)}\n"
+        rstr += f".shift            = {ndarray_str(self.shift)}\n"
+        rstr += f".mag              = {ndarray_str(self.mag)}\n"
+        rstr += f".rotation         = {ndarray_str(self.rotation)}\n"
+
+        rstr += f".xcoeff           = {ndarray_str(self.xcoeff)}\n"
+        rstr += f".ycoeff           = {ndarray_str(self.ycoeff)}\n"
+        rstr += f".x2coeff          = {ndarray_str(self.x2coeff)}\n"
+        rstr += f".y2coeff          = {ndarray_str(self.y2coeff)}\n"
         return rstr
 
 
