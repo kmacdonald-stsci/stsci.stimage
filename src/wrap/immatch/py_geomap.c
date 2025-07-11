@@ -218,7 +218,7 @@ py_geomap(PyObject* self, PyObject* args, PyObject* kwds)
         dbg_print("Error: PyArg_ParseTupleAndKeywords\n");
         return NULL;
     }
-    dbg_print("fit_obj = %p\n", fit_obj);
+    // dbg_print("fit_obj = %p\n", fit_obj);
 
     // Create Nx2 array, essentially a list of (x,y) points.
     // XXX Refactor candidate input_array = n_by_2_array(input_obj);
@@ -267,7 +267,7 @@ py_geomap(PyObject* self, PyObject* args, PyObject* kwds)
     // XXX End parse_args_from_python_to_c(python_args, c_args);
     // ---------------------------------------------------------------------------
 
-    dbg_print("Entering geomap\n");
+    // dbg_print("Entering geomap\n");
     if (geomap(
                 ninput, (coord_t*)PyArray_DATA(input_array),
                 nref, (coord_t*)PyArray_DATA(ref_array),
@@ -281,7 +281,7 @@ py_geomap(PyObject* self, PyObject* args, PyObject* kwds)
         PyErr_SetString(PyExc_RuntimeError, stimage_error_get_message(&error));
         goto exit;
     }
-    dbg_print("Returned from geomap\n");
+    // dbg_print("Returned from geomap\n");
 
     // -----------------------------------------------------
     // XXX Refactor candidate output_array = get_output_array(output);
